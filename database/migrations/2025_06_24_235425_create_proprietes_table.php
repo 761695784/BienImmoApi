@@ -24,7 +24,7 @@ return new class extends Migration
     $table->string('surface');
     $table->string('chambres');
     $table->string('salle_bains');
-    $table->string('image')->nullable();
+    // $table->string('image')->nullable();
     $table->enum('statut', ['Disponible', 'Occupé'])->default('Disponible');
 
     // Relations

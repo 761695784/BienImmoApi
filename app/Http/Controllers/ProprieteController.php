@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\Propriete;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreProprieteRequest;
 use App\Http\Requests\UpdateProprieteRequest;
 
@@ -29,7 +32,38 @@ class ProprieteController extends Controller
      */
     public function store(StoreProprieteRequest $request)
     {
-        //
+     $user = Auth::user();
+
+    $propriete = Propriete::create([
+        'titre' => $request->titre,
+        'description' => $request->description,
+        'adresse' => $request->adresse,
+        'ville' => $request->ville,
+        'prix' => $request->prix,
+        'surface' => $request->surface,
+        'chambres' => $request->chambres,
+        'salle_bains' => $request->salle_bains,
+        'statut' => $request->statut ?? 'Disponible',
+        'type_propriete_id' => $request->type_propriete_id,
+        'type_transaction_id' => $request->type_transaction_id,
+        'user_id' => $user->id,
+    ]);
+
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $imageFile) {
+            $path = $imageFile->store('proprietes', 'public');
+
+            Image::create([
+                'path' => Storage::url($path), // lien exploitable dans le front
+                'propriete_id' => $propriete->id,
+            ]);
+        }
+    }
+
+    return response()->json([
+        'message' => 'Propriété créée avec succès.',
+        'data' => $propriete->load('images'),
+    ], 201);
     }
 
     /**

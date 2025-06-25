@@ -40,7 +40,7 @@ class AuthController extends Controller
     return response()->json([
         "status" => true,
         "message" => "User registered successfully with role 'owner'",
-        
+
     ]);
 }
 
