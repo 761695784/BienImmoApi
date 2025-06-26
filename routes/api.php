@@ -12,6 +12,13 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     })->name('user');
-
     Route::post('/proprietes', [ProprieteController::class, 'store'])->name('proprietes.store');
+    Route::get('/mes-proprietes', [ProprieteController::class, 'indexForOwner']);
+
+    Route::put('/proprietes/{propriete}', [ProprieteController::class, 'update'])->name('proprietes.update');
+    Route::delete('/proprietes/{propriete}', [ProprieteController::class, 'destroy'])->name('proprietes.destroy');
 });
+
+  Route::get('/proprietes', [ProprieteController::class, 'indexPublic']);
+  Route::get('/all-proprietes', [ProprieteController::class, 'index'])->name('proprietes.index');
+  Route::get('/proprietes/{propriete}', [ProprieteController::class, 'show'])->name('proprietes.show');

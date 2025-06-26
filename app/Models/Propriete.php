@@ -17,11 +17,11 @@ class Propriete extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function type() {
+    public function typepropriete() {
         return $this->belongsTo(TypePropriete::class);
     }
 
-    public function transaction() {
+    public function typetransaction() {
         return $this->belongsTo(TypeTransaction::class);
     }
 

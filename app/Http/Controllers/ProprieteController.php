@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Image;
 use App\Models\Propriete;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreProprieteRequest;
@@ -16,16 +17,43 @@ class ProprieteController extends Controller
      */
     public function index()
     {
-        //
+        $proprietes = Propriete::with(['images', 'typepropriete', 'typetransaction', 'user'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $proprietes
+        ]);
     }
 
+    public function indexPublic()
+    {
+        $proprietes = Propriete::where('statut', 'Disponible')
+            ->with(['images', 'typepropriete', 'typetransaction']) // facultatif : pour enrichir les infos
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $proprietes
+        ]);
+    }
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function indexForOwner()
     {
-        //
+        $user = Auth::user();
+
+        $proprietes = Propriete::where('user_id', $user->id)
+            ->with('images')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $proprietes
+        ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -71,8 +99,13 @@ class ProprieteController extends Controller
      */
     public function show(Propriete $propriete)
     {
-        //
+        $propriete->load(['images', 'typepropriete', 'typetransaction', 'user']);
+
+        return response()->json([
+            'data' => $propriete
+        ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -87,14 +120,39 @@ class ProprieteController extends Controller
      */
     public function update(UpdateProprieteRequest $request, Propriete $propriete)
     {
-        //
+        if (auth()->id() !== $propriete->user_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à modifier ce bien.'], 403);
+        }
+
+        // Mise à jour partielle avec les champs présents
+        $propriete->update($request->only(array_keys($request->validated())));
+        $propriete->refresh();
+
+        return response()->json([
+            'message' => 'Bien mis à jour avec succès.',
+            'data' => $propriete
+        ]);
     }
+
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Propriete $propriete)
     {
-        //
+        $user = auth()->user();
+
+        // Si ce n'est pas le owner et pas un admin, on refuse
+        if ($user->id !== $propriete->user_id && $user->role !== 'admin') {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à supprimer ce bien.'], 403);
+        }
+
+        $propriete->delete();
+
+        return response()->json([
+            'message' => 'Bien supprimé avec succès.'
+        ]);
     }
+
 }
